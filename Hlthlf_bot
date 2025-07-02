@@ -1,0 +1,98 @@
+pip install python-telegram-bot requests schedule
+import logging
+from telegram import Update
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    MessageHandler,
+    filters,
+    CallbackContext,
+)
+import random
+import time
+import schedule
+import threading
+
+# Ваш токен бота, полученный от BotFather
+TOKEN = '8107143805:AAFT_G-cqovA3YLuJ3XRwm3TKyo59K5KR6Q'
+
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                     level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+def start(update: Update, context: CallbackContext):
+    user = update.effective_user.first_name
+    welcome_message = f"Приветствуем вас, {user}, в мире здорового образа жизни!\n\n"
+    welcome_message += "FitLifeBot создан специально для тех, кто хочет заботиться о своем теле и самочувствии. Мы поможем вам правильно питаться, заниматься спортом и улучшать качество вашей жизни.\n"
+    welcome_message += "\nДавайте начнем прямо сейчас!"
+    context.bot.send_message(chat_id=update.effective_chat.id, text=welcome_message)
+
+def motivation(update: Update, context: CallbackContext):
+    motivations = ["Каждый день — новый шанс стать лучшей версией себя!",
+                   "Нет невозможных целей, есть лишь недостаточно сильное желание достичь их."]
+    message = f"Сегодняшняя мотивация:\n*{random.choice(motivations)}*\n\nПродолжайте двигаться вперёд небольшими шагами, и вскоре вы заметите значительные перемены в своей жизни!"
+    context.bot.send_message(chat_id=update.effective_chat.id, text=message, parse_mode="MarkdownV2")
+
+def recipes(update: Update, context: CallbackContext):
+    message = "Хотите научиться готовить вкусно и полезно?\n\nНаш канал собрал лучшие проверенные рецепты для тех, кто заботится о фигуре и здоровье. Попробуйте приготовить одно из наших фирменных блюд уже сегодня!\n\nПосмотреть рецепты → *[edimdoma.ru](https://edimdoma.ru)* 📖🥗"
+    context.bot.send_message(chat_id=update.effective_chat.id, text=message, disable_web_page_preview=True, parse_mode="MarkdownV2")
+
+def trainings(update: Update, context: CallbackContext):
+    message = "Поддерживать тело в форме легко и приятно!\n\nМы предлагаем эффективные тренировки для любого уровня физической подготовки. Вы можете заниматься дома или в зале, выбрав подходящий комплекс упражнений.\n\nПопробуйте одну из наших популярных тренировок: [Видео тренировки от Александра Невского](https://www.youtube.com/watch?v=J-t8iI-ryvY)"
+    context.bot.send_message(chat_id=update.effective_chat.id, text=message, parse_mode="MarkdownV2")
+
+def health_tips(update: Update, context: CallbackContext):
+    tips = ["Начните утро с стакана тёплой воды",
+            "Соблюдайте умеренность в потреблении сладкого",
+            "Регулярные прогулки укрепляют сердечно-сосудистую систему"]
+    message = f"Хорошее самочувствие начинается с маленьких шагов!\n\n*{random.choice(tips)}*"
+    context.bot.send_message(chat_id=update.effective_chat.id, text=message, parse_mode="MarkdownV2")
+
+def water_reminder(update: Update, context: CallbackContext):
+    context.job_queue.run_repeating(water_reminder_job, interval=60*60, first=10)
+    context.bot.send_message(chat_id=update.effective_chat.id, text="Напоминания активированы! 👍")
+
+def water_reminder_job(context: CallbackContext):
+    chat_id = context.job.context
+    context.bot.send_message(chat_id=chat_id, text="Время выпить воды! 🛁")
+
+def sleep_tracker(update: Update, context: CallbackContext):
+    hours_needed = random.randint(7, 9)
+    message = f"Сон — основа восстановления и продуктивности!\n\nВашему организму необходимо примерно *{hours_needed}* часа сна для оптимального функционирования."
+    context.bot.send_message(chat_id=update.effective_chat.id, text=message, parse_mode="MarkdownV2")
+
+def question_answer(update: Update, context: CallbackContext):
+    context.bot.send_message(chat_id=update.effective_chat.id, text="Задавайте любые интересующие вас вопросы о здоровье, правильном питании и занятиях спортом. Наши эксперты готовы поделиться ценными знаниями и советами.\n\nЗадайте ваш вопрос сейчас → */ask*")
+
+def quote_day(update: Update, context: CallbackContext):
+    quotes = ["Каждое маленькое усилие приближает нас к большой цели.",
+              "То, что кажется трудностью сегодня, завтра станет частью успеха."]
+    message = f"Новая цитата дня:\n*{random.choice(quotes)}*"
+    context.bot.send_message(chat_id=update.effective_chat.id, text=message, parse_mode="MarkdownV2")
+
+def community(update: Update, context: CallbackContext):
+    message = "Присоединяйтесь к нашей дружной команде единомышленников, готовых делиться успехами и поддерживать друг друга на пути к здоровому образу жизни!\n\nТелеграм-группа FitLife Community: *t.me/FitLifeCommunityGroup*"
+    context.bot.send_message(chat_id=update.effective_chat.id, text=message, parse_mode="MarkdownV2")
+
+def run_bot():
+    """Основная логика запуска бота"""
+    app = Application.builder().token(TOKEN).build()
+
+    # Обработчики команд
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("motivation", motivation))
+    app.add_handler(CommandHandler("recipes", recipes))
+    app.add_handler(CommandHandler("trainings", trainings))
+    app.add_handler(CommandHandler("health_tips", health_tips))
+    app.add_handler(CommandHandler("water_reminder", water_reminder))
+    app.add_handler(CommandHandler("sleep_tracker", sleep_tracker))
+    app.add_handler(CommandHandler("question_answer", question_answer))
+    app.add_handler(CommandHandler("quote_day", quote_day))
+    app.add_handler(CommandHandler("community", community))
+
+    app.run_polling()
+
+if __name__ == "__main__":
+    # Запустим бот в отдельной нити, чтобы избежать конфликтов с asyncio
+    thread = threading.Thread(target=run_bot)
+    thread.start()
